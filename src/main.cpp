@@ -110,6 +110,28 @@ struct CMainSignals {
 } g_signals;
 }
 
+bool IsMNCollateralValid(int64_t value, int nHeight) {
+    if (nHeight < TIERED_MASTERNODES_START_BLOCK) {
+        return value == 3000*COIN;
+    } else {
+    // Using BOOST_FOREACH for concistency with the rest of the code, everything should be using a plain for from c++ 11 or 17
+    BOOST_FOREACH(PAIRTYPE(const int, int)& mntier, masternodeTiers)
+        {
+            if (value == (mntier.second)*COIN)
+            return true;
+        }
+    }
+    return false;
+}
+
+int64_t GetMNCollateral(int nHeight, int tier) {
+    if (nHeight < TIERED_MASTERNODES_START_BLOCK) {
+        return 3000;
+    } else {
+        return masternodeTiers[tier];
+    }
+}
+
 void RegisterWallet(CWalletInterface* pwalletIn) {
     g_signals.SyncTransaction.connect(boost::bind(&CWalletInterface::SyncTransaction, pwalletIn, _1, _2, _3));
     g_signals.EraseTransaction.connect(boost::bind(&CWalletInterface::EraseFromWallet, pwalletIn, _1));
@@ -732,7 +754,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CTransaction &tx, bool fLimitFree,
     if (tx.IsCoinBase())
         return tx.DoS(100, error("AcceptToMemoryPool : coinbase as individual tx"));
 
-    // ppcoin: coinstake is also only valid in a block, not as a loose transaction
+    // HeldCoinCoin: coinstake is also only valid in a block, not as a loose transaction
     if (tx.IsCoinStake())
         return tx.DoS(100, error("AcceptToMemoryPool : coinstake as individual tx"));
 
@@ -910,7 +932,7 @@ bool AcceptableInputs(CTxMemPool& pool, const CTransaction &txo, bool fLimitFree
     if (tx.IsCoinBase())
         return tx.DoS(100, error("AcceptableInputs : coinbase as individual tx"));
 
-    // ppcoin: coinstake is also only valid in a block, not as a loose transaction
+    // HeldCoinCoin: coinstake is also only valid in a block, not as a loose transaction
     if (tx.IsCoinStake())
         return tx.DoS(100, error("AcceptableInputs : coinstake as individual tx"));
 
@@ -1312,7 +1334,7 @@ uint256 static GetOrphanRoot(const uint256& hash)
     } while(true);
 }
 
-// ppcoin: find block wanted by given orphan block
+// HeldCoinCoin: find block wanted by given orphan block
 uint256 WantedByOrphan(const COrphanBlock* pblockOrphan)
 {
     // Work back to the first block in the orphan chain
@@ -1376,28 +1398,84 @@ int64_t GetProofOfWorkReward(int nHeight, int64_t nFees)
     return nSubsidy + nFees;
 }
 
-// miner's coin stake reward
-int64_t GetProofOfStakeReward(const CBlockIndex* pindexPrev, int64_t nCoinAge, int64_t nFees)
-{
-    int64_t nSubsidy = 64;
 
-    if(nBestHeight >= 1 && nBestHeight <= 500){
-      nSubsidy = 0 * COIN;
-    } else if(nBestHeight >= 500 && nBestHeight < 1500){
-      nSubsidy = 4 * COIN;
-    } else if(nBestHeight >= 1500 && nBestHeight < 5000){
-      nSubsidy = 8 * COIN;
-    } else if(nBestHeight >= 5000 && nBestHeight < 10000){
-      nSubsidy = 12 * COIN;
-    } else if(nBestHeight >= 10000 && nBestHeight < 25000){
-      nSubsidy = 24 * COIN;
-    } else if(nBestHeight >= 25000 && nBestHeight < 50000){
-      nSubsidy = 36 * COIN;
-    } else{
-      nSubsidy = 64 * COIN;
+// Checks if a given reward present in a block is valid
+bool IsPOSRewardValid(int64_t value, int64_t nFees) {
+    int nHeight = pindexBest->nHeight+1;
+    /*if (nHeight < 20000) {
+        return value == (STATIC_POS_REWARD + nFees);
     }
+    else {*/
+        if (nHeight < TIERED_MASTERNODES_START_BLOCK) {
+            return value == (STATIC_POS_REWARD + nFees);
+        }
+        else {
+            // Using BOOST_FOREACH for concistency with the rest of the code
 
-    return nSubsidy + nFees;
+std::map<int, int> masternodeTierRewards = GetmasternodeTierRewards(pindexBest);
+            BOOST_FOREACH(PAIRTYPE(const int, int)& tier, masternodeTierRewards)
+            {
+                if (value == (tier.second*COIN + GetPosRewardTieredMN(pindexBest) + nFees))
+                    return true;
+            }
+            // The case of a wallet staking with no mns up
+            if (value ==  GetPosRewardTieredMN(pindexBest) + nFees) {
+                return true;
+            }
+        }
+   // }
+    return false;
+}
+// miner's coin stake reward
+int64_t GetProofOfStakeReward(const CBlockIndex* pindexPrev, int64_t nFees)
+{
+    int64_t nSubsidy = 0 * COIN;
+    if (pindexBest->nHeight+1 > 1 && pindexBest->nHeight+1 <= TIERED_MASTERNODES_START_BLOCK) {
+        nSubsidy = STATIC_POS_REWARD;
+    }
+    else
+    {
+        if(pindexBest->nHeight+1 > TIERED_MASTERNODES_START_BLOCK)
+            nSubsidy = GetPosRewardTieredMN(pindexPrev);
+    } 
+	return nSubsidy + nFees;
+}
+
+int64_t GetPosRewardTieredMN(const CBlockIndex* pindexPrev)
+{
+    int nHeight = pindexBest->nHeight+1;
+
+    if (nHeight > 1 && nHeight <= 500) 
+        return POS_REWARD_TIERED_MN_LVL1;
+    if (nHeight > 500 && nHeight <= 1500) 
+        return POS_REWARD_TIERED_MN_LVL2;
+	if (nHeight > 1500 && nHeight <= 5000) 
+        return POS_REWARD_TIERED_MN_LVL3;
+	if (nHeight > 5000 && nHeight <= 10000) 
+        return POS_REWARD_TIERED_MN_LVL4;
+		if (nHeight > 10000 && nHeight <= 25000) 
+        return POS_REWARD_TIERED_MN_LVL5;
+		if (nHeight > 25000 && nHeight <= 50000) 
+        return POS_REWARD_TIERED_MN_LVL6;
+    if (nHeight > 50000 ) 
+        return POS_REWARD_TIERED_MN_LVL7;
+
+    return 0;
+}
+std::map<int, int> GetmasternodeTierRewards(const CBlockIndex* pindexPrev)
+{
+    int nHeight = pindexBest->nHeight+1;
+
+      if (nHeight > 100000 && nHeight <= 110000) 
+        return masternodeTierRewardsLVL1;
+    if (nHeight > 110000 && nHeight <= 120000) 
+        return masternodeTierRewardsLVL2;
+	 if (nHeight > 120000 && nHeight <= 130000) 
+        return masternodeTierRewardsLVL3;
+    if (nHeight > 145000 ) 
+        return masternodeTierRewardsLVL4; 
+        
+    return masternodeTierRewardsLVL1;
 }
 
 static int64_t nTargetTimespan = 48 * 60;  // 48 mins
@@ -1691,7 +1769,7 @@ bool CTransaction::ConnectInputs(CTxDB& txdb, MapPrevTx inputs, map<uint256, CTx
                     return error("ConnectInputs() : tried to spend %s at depth %d", txPrev.IsCoinBase() ? "coinbase" : "coinstake", nSpendDepth);
                 }
             }
-            // ppcoin: check transaction timestamp
+            // HeldCoinCoin: check transaction timestamp
             if (txPrev.nTime > nTime)
                 return DoS(100, error("ConnectInputs() : transaction timestamp earlier than input transaction"));
 
@@ -1795,7 +1873,7 @@ bool CBlock::DisconnectBlock(CTxDB& txdb, CBlockIndex* pindex)
             return error("DisconnectBlock() : WriteBlockIndex failed");
     }
 
-    // ppcoin: clean up wallet after disconnecting coinstake
+    // HeldCoinCoin: clean up wallet after disconnecting coinstake
     BOOST_FOREACH(CTransaction& tx, vtx)
         SyncWithWallets(tx, this, false);
 
@@ -1990,18 +2068,19 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex, bool fJustCheck)
     }
     if (IsProofOfStake())
     {
-        // ppcoin: coin stake tx earns reward instead of paying fee
+        // HeldCoinCoin: coin stake tx earns reward instead of paying fee
         uint64_t nCoinAge;
         if (!vtx[1].GetCoinAge(txdb, pindex->pprev, nCoinAge))
             return error("ConnectBlock() : %s unable to get coin age for coinstake", vtx[1].GetHash().ToString());
 
-        int64_t nCalculatedStakeReward = GetProofOfStakeReward(pindex->pprev, nCoinAge, nFees);
+        
+        if (!IsPOSRewardValid(nStakeReward, nFees))
+            return DoS(100, error("ConnectBlock() : coinstake pays too much(actual=%d)", nStakeReward));
 
-        if (nStakeReward > nCalculatedStakeReward)
-            return DoS(100, error("ConnectBlock() : coinstake pays too much(actual=%d vs calculated=%d)", nStakeReward, nCalculatedStakeReward));
+        
     }
 
-    // ppcoin: track money supply and mint amount info
+    // HeldCoinCoin: track money supply and mint amount info
 #ifndef LOWMEM
     pindex->nMint = nValueOut - nValueIn + nFees;
     pindex->nMoneySupply = (pindex->pprev? pindex->pprev->nMoneySupply : 0) + nValueOut - nValueIn;
@@ -2330,7 +2409,7 @@ bool CBlock::SetBestChain(CTxDB& txdb, CBlockIndex* pindexNew)
     return true;
 }
 
-// ppcoin: total coin age spent in transaction, in the unit of coin-days.
+// HeldCoinCoin: total coin age spent in transaction, in the unit of coin-days.
 // Only those coins meeting minimum age requirement counts. As those
 // transactions not in main chain are not currently indexed so we
 // might not find out about their coin age. Older transactions are
@@ -2395,17 +2474,17 @@ bool CBlock::AddToBlockIndex(unsigned int nFile, unsigned int nBlockPos, const u
         pindexNew->nHeight = pindexNew->pprev->nHeight + 1;
     }
 
-    // ppcoin: compute chain trust score
+    // HeldCoinCoin: compute chain trust score
     pindexNew->nChainTrust = (pindexNew->pprev ? pindexNew->pprev->nChainTrust : 0) + pindexNew->GetBlockTrust();
 
-    // ppcoin: compute stake entropy bit for stake modifier
+    // HeldCoinCoin: compute stake entropy bit for stake modifier
     if (!pindexNew->SetStakeEntropyBit(GetStakeEntropyBit()))
         return error("AddToBlockIndex() : SetStakeEntropyBit() failed");
 
     // Record proof hash value
     pindexNew->hashProof = hashProof;
 
-    // ppcoin: compute stake modifier
+    // HeldCoinCoin: compute stake modifier
     uint64_t nStakeModifier = 0;
     bool fGeneratedStakeModifier = false;
     if (!ComputeNextStakeModifier(pindexNew->pprev, nStakeModifier, fGeneratedStakeModifier))
@@ -2528,86 +2607,56 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
                         masternodePaymentAmount = vtx[1].vout[i].nValue;
                         break;
                     }
-                    bool foundPaymentAmount = false;
-                    bool foundPayee = false;
                     bool foundPaymentAndPayee = false;
-
+                    bool checkoff = true;
                     CScript payee;
-					string targetNode;
-                    CTxIn vin;
-					
-					CScript payeerewardaddress = CScript();
-					int payeerewardpercent = 0;
-					bool hasPayment = true;
-
-					if(!masternodePayments.GetBlockPayee(pindexBest->nHeight+1, payee, vin)){
-						CMasternode* winningNode = mnodeman.GetCurrentMasterNode(1);
-						if(winningNode){
-							payee = GetScriptForDestination(winningNode->pubkey.GetID());
-							payeerewardaddress = winningNode->rewardAddress;
-							payeerewardpercent = winningNode->rewardPercentage;
-					   
-						if(hasPayment && payeerewardpercent == 0){
-							CTxDestination address1;
-							ExtractDestination(payee, address1);
-							CHeldCoinAddress address2(address1);
-							targetNode = address2.ToString().c_str();	
-						}
-
-						if(hasPayment && payeerewardpercent == 100){
-						CTxDestination address1;
-							ExtractDestination(payeerewardaddress, address1);
-							CHeldCoinAddress address2(address1);
-							targetNode = address2.ToString().c_str();
-							
-						}
-
-						if(hasPayment && payeerewardpercent > 0 && payeerewardpercent < 100){
-							CTxDestination address1;
-							ExtractDestination(payee, address1);
-							CHeldCoinAddress address2(address1);
-							
-							CTxDestination address3;
-							ExtractDestination(payeerewardaddress, address3);
-							CHeldCoinAddress address4(address3);
-							targetNode = address2.ToString().c_str();
-							
-						}
-						LogPrintf("Detected Masternode payment to %s\n", targetNode);	
-						} else {
-							LogPrintf("Cant calculate Winner, so passing.");                        
-                            foundPaymentAmount = true;
-                            foundPayee = true;
+                    CScript payeerewardaddress;
+                    if(!checkoff){
+                        CMasternode* winningNode = mnodeman.GetCurrentMasterNode(1);
+                        if(!winningNode){
                             foundPaymentAndPayee = true;
+                            LogPrintf("CheckBlock() : Couldn't calculate winner! \n");
+                        }
+                        else{
+                            payee = GetScriptForDestination(winningNode->pubkey.GetID());
+					        payeerewardaddress = winningNode->rewardAddress;
+
+
+                            if(fDebug) {
+                                CTxDestination addressnned1,addressnned2;
+                                ExtractDestination(payee, addressnned1);
+                                ExtractDestination(payeerewardaddress, addressnned2);
+                                CHeldCoinCoinAddress address23(addressnned1);
+                                CHeldCoinCoinAddress address24(addressnned2);
+                                LogPrintf("\nCheckBlock() : I need %s or %s with %d height %d\n",address23.ToString(),address24.ToString(),masternodePaymentAmount,pindexBest->nHeight+1);
+                            }
+                            for (unsigned int i = 0; i < vtx[1].vout.size(); i++) {
+
+                                if(fDebug) { CTxDestination addressfound;
+                                    ExtractDestination(vtx[1].vout[i].scriptPubKey, addressfound);
+                                    CHeldCoinCoinAddress address25(addressfound);
+                                    LogPrintf("CheckBlock() : I found %s with %d \n",address25.ToString(),vtx[1].vout[i].nValue);
+                                }
+                                if(vtx[1].vout[i].nValue == masternodePaymentAmount && (vtx[1].vout[i].scriptPubKey == payee || vtx[1].vout[i].scriptPubKey == payeerewardaddress) )
+                                {
+                                    foundPaymentAndPayee = true;
+                                    break;
+                                }
+                            }   
                         }
                     }
-
-					
-                    for (unsigned int i = 0; i < vtx[1].vout.size(); i++) {
-						CTxDestination address1;
-						ExtractDestination(vtx[1].vout[i].scriptPubKey, address1);
-						CHeldCoinAddress address2(address1);   
-                        if(vtx[1].vout[i].nValue == masternodePaymentAmount )
-                            foundPaymentAmount = true;
-                        if(address2.ToString().c_str() == targetNode)
-                            foundPayee = true;
-						if(vtx[1].vout[i].nValue == masternodePaymentAmount && address2.ToString().c_str() == targetNode)
-                            foundPaymentAndPayee = true;
-                    }
+                    else
+                        foundPaymentAndPayee = true;
 
                     CTxDestination address1;
                     ExtractDestination(payee, address1);
-                    CHeldCoinAddress address2(address1);
-					if (pindexBest->nHeight+1 < 250000) { // TODO: remove magic number; use in one place
-						foundPaymentAmount = true;
-						foundPayee = true;
-						foundPaymentAndPayee = true;
-					}
+                    CHeldCoinCoinAddress address2(address1);
+
                     if(!foundPaymentAndPayee) {
-                        if(fDebug) { LogPrintf("CheckBlock() : Couldn't find masternode payment(%d|%d) or payee(%d|%s) nHeight %d. \n", foundPaymentAmount, masternodePaymentAmount, foundPayee, address2.ToString().c_str(), pindexBest->nHeight+1); }
-                        return DoS(100, error("CheckBlock() : Couldn't find masternode payment or payee"));
+                        if(fDebug) { LogPrintf("CheckBlock() : Couldn't find masternode payment(%d|%d) and payee(%s) nHeight %d. \n", foundPaymentAndPayee, masternodePaymentAmount, address2.ToString().c_str(), pindexBest->nHeight+1); }
+                        return DoS(1, error("CheckBlock() : Couldn't find masternode payment or payee"));
                     } else {
-                        LogPrintf("CheckBlock() : Found payment(%d|%d) or payee(%d|%s) nHeight %d. \n", foundPaymentAmount, masternodePaymentAmount, foundPayee, address2.ToString().c_str(), pindexBest->nHeight+1);
+                        LogPrintf("CheckBlock() : Found payment(%d|%d) and payee(%s) nHeight %d. \n", foundPaymentAndPayee, masternodePaymentAmount,address2.ToString().c_str(), pindexBest->nHeight+1);
                     }
                 } else {
                     if(fDebug) { LogPrintf("CheckBlock() : Skipping masternode payment check - nHeight %d Hash %s\n", pindexBest->nHeight+1, GetHash().ToString().c_str()); }
@@ -2630,7 +2679,7 @@ bool CBlock::CheckBlock(bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig) c
         if (!tx.CheckTransaction())
             return DoS(tx.nDoS, error("CheckBlock() : CheckTransaction failed"));
 
-        // ppcoin: check transaction timestamp
+        // HeldCoinCoin: check transaction timestamp
         if (GetBlockTime() < (int64_t)tx.nTime)
             return DoS(50, error("CheckBlock() : block timestamp earlier than transaction timestamp"));
     }
@@ -2760,6 +2809,20 @@ bool CBlock::AcceptBlock()
                 pnode->PushInventory(CInv(MSG_BLOCK, hash));
     }
 
+    // Record masternode payment
+    if (IsProofOfStake()) {
+        CScript payee;
+        for (int i = vtx[1].vout.size(); i--> 0; ) {
+            payee = vtx[1].vout[i].scriptPubKey;
+            break;
+        }
+        CTxDestination address1;
+        ExtractDestination(payee, address1);
+        CHeldCoinCoinAddress address2(address1);
+
+        mnodeman.RecordMasternodePayment(payee, nTime, PROTOCOL_VERSION);
+    }
+
     return true;
 }
 
@@ -2823,7 +2886,7 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
     if (mapOrphanBlocks.count(hash))
         return error("ProcessBlock() : already have block (orphan) %s", hash.ToString());
 
-    // ppcoin: check proof-of-stake
+    // HeldCoinCoin: check proof-of-stake
     // Limited duplicity on stake: prevents block flood attack
     // Duplicate stake allowed only when there is orphan child block
     if (!fReindex && !fImporting && pblock->IsProofOfStake() && setStakeSeen.count(pblock->GetProofOfStake()) && !mapOrphanBlocksByPrev.count(hash))
@@ -2859,7 +2922,7 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
 
         // Accept orphans as long as there is a node to request its parents from
         if (pfrom) {
-            // ppcoin: check proof-of-stake
+            // HeldCoinCoin: check proof-of-stake
             if (pblock->IsProofOfStake())
             {
                 // Limited duplicity on stake: prevents block flood attack
@@ -2884,7 +2947,7 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
 
             // Ask this guy to fill in what we're missing
             PushGetBlocks(pfrom, pindexBest, GetOrphanRoot(hash));
-            // ppcoin: getblocks may not obtain the ancestor block rejected
+            // HeldCoinCoin: getblocks may not obtain the ancestor block rejected
             // earlier by duplicate-stake check so we ask for it again directly
             if (!IsInitialBlockDownload())
                 pfrom->AskFor(CInv(MSG_BLOCK, WantedByOrphan(pblock2)));
@@ -2966,7 +3029,7 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
 }
 
 #ifdef ENABLE_WALLET
-// novacoin: attempt to generate suitable proof-of-stake
+// HeldCoinCoin: attempt to generate suitable proof-of-stake
 bool CBlock::SignBlock(CWallet& wallet, int64_t nFees)
 {
     // if we are trying to sign
@@ -3598,11 +3661,11 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         CAddress addrFrom;
         uint64_t nNonce = 1;
         vRecv >> pfrom->nVersion >> pfrom->nServices >> nTime >> addrMe;
-        if (nBestHeight >= 70000 && pfrom->nVersion < MIN_PEER_PROTO_VERSION)
+        if (pfrom->nVersion < MIN_PEER_PROTO_VERSION)
         {
             // disconnect from peers older than this proto version
             LogPrintf("partner %s using obsolete version %i; disconnecting\n", pfrom->addr.ToString(), pfrom->nVersion);
-             pfrom->fDisconnect = true; 
+            pfrom->fDisconnect = true;
             return false;
         }
 

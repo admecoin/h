@@ -91,6 +91,7 @@ CMasternode::CMasternode()
     nLastPaid = GetAdjustedTime();
     isPortOpen = true;
     isOldNode = true;
+	tier = 0;
 }
 
 CMasternode::CMasternode(const CMasternode& other)
@@ -121,6 +122,8 @@ CMasternode::CMasternode(const CMasternode& other)
     nLastPaid = GetAdjustedTime();
     isPortOpen = other.isPortOpen;
     isOldNode = other.isOldNode;
+	 tier = other.tier;
+    score = other.score;
 }
 
 CMasternode::CMasternode(CService newAddr, CTxIn newVin, CPubKey newPubkey, std::vector<unsigned char> newSig, int64_t newSigTime, CPubKey newPubkey2, int protocolVersionIn, CScript newRewardAddress, int newRewardPercentage)
@@ -149,6 +152,10 @@ CMasternode::CMasternode(CService newAddr, CTxIn newVin, CPubKey newPubkey, std:
     nLastScanningErrorBlockHeight = 0;
     isPortOpen = true;
     isOldNode = true;
+	tier = 1;
+    score = 0;
+    // On new additions set last paid to now
+    nLastPaid = GetAdjustedTime();
 }
 
 //
@@ -158,17 +165,49 @@ CMasternode::CMasternode(CService newAddr, CTxIn newVin, CPubKey newPubkey, std:
 //
 uint256 CMasternode::CalculateScore(int mod, int64_t nBlockHeight)
 {
-    if(pindexBest == NULL) return 0;
+ if(pindexBest == NULL) return 0;
+
+    uint256 r;
+    if (nBlockHeight == 0)
+        nBlockHeight == pindexBest->nHeight;
 
     uint256 hash = 0;
     uint256 aux = vin.prevout.hash + vin.prevout.n;
 
-    if(!GetBlockHash(hash, nBlockHeight)) return 0;
+    if (!GetBlockHash(hash, nBlockHeight)) return 0;
 
     uint256 hash2 = Hash(BEGIN(hash), END(hash));
     uint256 hash3 = Hash(BEGIN(hash), END(hash), BEGIN(aux), END(aux));
 
-    uint256 r = (hash3 > hash2 ? hash3 - hash2 : hash2 - hash3);
+    r = (hash3 > hash2 ? hash3 - hash2 : hash2 - hash3);
+
+    unsigned int rInt32 = 0;
+    memcpy(&rInt32, &r, 4);
+    unsigned int iLastPaid = 0;
+    CScript pubkeyWork;
+    pubkeyWork.SetDestination(pubkey.GetID());
+    CTxDestination address1;
+    ExtractDestination(pubkeyWork, address1);
+    CHeldCoinCoinAddress address2(address1);
+    std::string strAddr = address2.ToString();
+    uint256 hash4;
+    SHA256((unsigned char*)strAddr.c_str(), strAddr.length(), (unsigned char*)&hash4);
+
+    unsigned int iAddrHash;
+    memcpy(&iAddrHash, &hash4, 4);
+    iAddrHash = iAddrHash << 11;
+    CBlockIndex* pIndexWork = pindexBest;
+    for (iLastPaid = 1; iLastPaid < 4095; iLastPaid++) {
+        if (pIndexWork) {
+            if ((pIndexWork->nNonce & (~2047)) == iAddrHash)
+                break;
+            pIndexWork = pIndexWork->pprev;
+        }
+    }
+
+    rInt32 = (rInt32 >> 12);
+    rInt32 = (rInt32 | (iLastPaid<<20));
+    r = rInt32;
 
     return r;
 }
@@ -195,14 +234,39 @@ void CMasternode::Check()
         return;
     }
 
-    if(!unitTest){
-        CValidationState state;
-        CTransaction tx = CTransaction();
-        CTxOut vout = CTxOut((GetMNCollateral(pindexBest->nHeight)-1)*COIN, darkSendPool.collateralPubKey);
-        tx.vin.push_back(vin);
-        tx.vout.push_back(vout);
+    bool fAcceptable = false;
 
-	if(!AcceptableInputs(mempool, tx, false, NULL)){
+    if(!unitTest) {
+        uint256 hashBlock = 0;
+        CTransaction tx = CTransaction();
+        GetTransaction(vin.prevout.hash, tx, hashBlock);
+        int64_t checkValue = tx.vout[vin.prevout.n].nValue;
+        if (tier >= 0) {
+            BOOST_FOREACH(PAIRTYPE(const int, int) & mntier, masternodeTiers)
+            {
+                if (!fAcceptable && (mntier.second*COIN) == checkValue) {
+                    CTransaction tx = CTransaction();
+                    CTxOut vout = CTxOut((GetMNCollateral(pindexBest->nHeight, mntier.first)) * COIN,
+                                         darkSendPool.collateralPubKey);
+                    tx.vin.push_back(vin);
+                    tx.vout.push_back(vout);
+                    {
+                        TRY_LOCK(cs_main, lockMain);
+                        if (!lockMain) return;
+                        fAcceptable = AcceptableInputs(mempool, tx, false, NULL);
+                        if (fAcceptable) { // Update mn tier on our records
+                            tier = (mntier.first);
+                        }
+                        else {
+                            tx.vin.pop_back();
+                            tx.vout.pop_back();
+                        }
+                    }
+                }
+            }
+        }
+
+        if (!fAcceptable) {
             activeState = MASTERNODE_VIN_SPENT;
             return;
         }

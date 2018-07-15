@@ -13,7 +13,7 @@
 #include "base58.h"
 #include "main.h"
 #include "script.h"
-#include "masternode.h"
+#include "boost/assign.hpp"
 
 class uint256;
 
@@ -34,7 +34,9 @@ class uint256;
 #define MASTERNODE_EXPIRATION_SECONDS          (65*60)
 #define MASTERNODE_REMOVAL_SECONDS             (70*60)
 
+#define TIERED_MASTERNODES_START_BLOCK         100001// tiered mns 1st block
 using namespace std;
+using namespace boost::assign;
 
 class CMasternode;
 
@@ -43,6 +45,13 @@ extern map<int64_t, uint256> mapCacheBlockHashes;
 
 bool GetBlockHash(uint256& hash, int nBlockHeight);
 
+typedef std::map<int, int> intMap;
+// Masternode tiers
+static std::map<int, int> masternodeTiers = map_list_of (1, 100000) (2, 300000) (3, 600000) (4, 1000000) ; 
+static std::map<int, int> masternodeTierRewardsLVL1 = map_list_of (1, 900) (2, 2700.10) (3, 6210) (4, 10800) ;
+static std::map<int, int> masternodeTierRewardsLVL2 = map_list_of (1, 720) (2, 2160.10) (3, 4968) (4, 8640) ;
+static std::map<int, int> masternodeTierRewardsLVL3 = map_list_of (1, 540) (2, 1620.10) (3, 3726) (4, 6480) ;
+static std::map<int, int> masternodeTierRewardsLVL4 = map_list_of (1, 360) (2, 1080.10) (3, 2484) (4, 4320) ;
 //
 // The Masternode Class. For managing the darksend process. It contains the input of the 500 HLDC, signature to prove
 // it's the one who own that ip address and code for calculating the payment election.
@@ -86,6 +95,8 @@ public:
     int64_t nLastPaid;
     bool isPortOpen;
     bool isOldNode;
+	int tier;
+    unsigned int score;
 
     CMasternode();
     CMasternode(const CMasternode& other);
@@ -122,6 +133,8 @@ public:
         swap(first.nLastScanningErrorBlockHeight, second.nLastScanningErrorBlockHeight);
         swap(first.nLastPaid, second.nLastPaid);
         swap(first.isPortOpen, second.isPortOpen);
+swap(first.tier, second.tier);
+        swap(first.score, second.score);
         swap(first.isOldNode, second.isOldNode);
     }
 
@@ -137,6 +150,14 @@ public:
     friend bool operator!=(const CMasternode& a, const CMasternode& b)
     {
         return !(a.vin == b.vin);
+	}
+    friend bool operator<(const CMasternode& a, const CMasternode&b)
+    {
+        return a.score < b.score;
+    }
+    friend bool operator>(const CMasternode& a, const CMasternode&b)
+    {
+        return a.score > b.score;
     }
 
     uint256 CalculateScore(int mod=1, int64_t nBlockHeight=0);
@@ -180,6 +201,10 @@ public:
     int64_t SecondsSincePayment()
     {
         return (GetAdjustedTime() - nLastPaid);
+	}
+
+    void UpdateTier(int newTier) {
+        tier = newTier;
     }
 
     void UpdateLastSeen(int64_t override=0)

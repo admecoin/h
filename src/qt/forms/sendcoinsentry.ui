@@ -13,6 +13,9 @@
   <property name="windowTitle">
    <string>Form</string>
   </property>
+  <property name="styleSheet">
+   <string notr="true">  background-color:rgb(255,255,255,240);</string>
+  </property>
   <property name="frameShape">
    <enum>QFrame::StyledPanel</enum>
   </property>
@@ -93,13 +96,7 @@
    <item row="8" column="1">
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
-      <widget class="BitcoinAmountField" name="payAmount">
-       <zorder>deleteButton</zorder>
-       <zorder>deleteButton</zorder>
-       <zorder>deleteButton</zorder>
-       <zorder>deleteButton</zorder>
-       <zorder>deleteButton</zorder>
-      </widget>
+      <widget class="BitcoinAmountField" name="payAmount"/>
      </item>
      <item>
       <widget class="QToolButton" name="deleteButton">

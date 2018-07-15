@@ -30,7 +30,7 @@ OptionsDialog::OptionsDialog(QWidget *parent) :
     ui->proxyIp->setEnabled(false);
     ui->proxyPort->setEnabled(false);
     ui->proxyPort->setValidator(new QIntValidator(1, 65535, this));
-
+    ui->useBlackTheme->setVisible(false);
     connect(ui->connectSocks, SIGNAL(toggled(bool)), ui->proxyIp, SLOT(setEnabled(bool)));
     connect(ui->connectSocks, SIGNAL(toggled(bool)), ui->proxyPort, SLOT(setEnabled(bool)));
     connect(ui->connectSocks, SIGNAL(clicked(bool)), this, SLOT(showRestartWarning_Proxy()));
@@ -139,7 +139,7 @@ void OptionsDialog::setMapper()
     mapper->addMapping(ui->lang, OptionsModel::Language);
     mapper->addMapping(ui->unit, OptionsModel::DisplayUnit);
     mapper->addMapping(ui->coinControlFeatures, OptionsModel::CoinControlFeatures);
-    //mapper->addMapping(ui->useBlackTheme, OptionsModel::UseBlackTheme);
+    mapper->addMapping(ui->useBlackTheme, OptionsModel::UseBlackTheme);
 
     /* Darksend Rounds */
     mapper->addMapping(ui->darksendRounds, OptionsModel::DarksendRounds);

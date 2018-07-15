@@ -709,7 +709,7 @@
           </widget>
          </item>
          <item>
-          <widget class="QLabel" name="HMAvailableLabel">
+          <widget class="QLabel" name="INITAvailableLabel">
            <property name="palette">
             <palette>
              <active>
@@ -1140,7 +1140,7 @@
           </widget>
          </item>
          <item>
-          <widget class="QLabel" name="labelHM">
+          <widget class="QLabel" name="labelINIT">
            <property name="font">
             <font>
              <weight>75</weight>
@@ -1203,7 +1203,7 @@
         </widget>
        </item>
        <item row="4" column="9">
-        <widget class="QLineEdit" name="UnitsInputHM">
+        <widget class="QLineEdit" name="UnitsInputINIT">
          <property name="minimumSize">
           <size>
            <width>0</width>
@@ -2237,14 +2237,14 @@
         </layout>
        </item>
        <item row="7" column="3">
-        <widget class="QPushButton" name="BuyHM">
+        <widget class="QPushButton" name="BuyINIT">
          <property name="text">
           <string>Buy HLDC</string>
          </property>
         </widget>
        </item>
        <item row="7" column="9">
-        <widget class="QPushButton" name="SellHMBTN">
+        <widget class="QPushButton" name="SellINITBTN">
          <property name="text">
           <string>Sell HLDC</string>
          </property>
@@ -2313,7 +2313,7 @@
         </widget>
        </item>
        <item row="0" column="1" colspan="5">
-        <widget class="QLabel" name="HMDemand">
+        <widget class="QLabel" name="INITDemand">
          <property name="font">
           <font>
            <pointsize>8</pointsize>
@@ -2328,7 +2328,7 @@
         </widget>
        </item>
        <item row="0" column="9" colspan="3">
-        <widget class="QLabel" name="HMSupply">
+        <widget class="QLabel" name="INITSupply">
          <property name="text">
           <string>Supply: 0.00000000 HLDC</string>
          </property>
@@ -3870,7 +3870,7 @@
           </widget>
          </item>
          <item>
-          <widget class="QLabel" name="BittrexHMLabel">
+          <widget class="QLabel" name="BittrexINITLabel">
            <property name="palette">
             <palette>
              <active>
@@ -4922,7 +4922,7 @@
         </widget>
        </item>
        <item row="0" column="3">
-        <widget class="QLabel" name="HMBalanceLabel">
+        <widget class="QLabel" name="INITBalanceLabel">
          <property name="font">
           <font>
            <pointsize>10</pointsize>
@@ -4993,7 +4993,7 @@
         </widget>
        </item>
        <item row="1" column="3">
-        <widget class="QLabel" name="HMAvailableLabel_2">
+        <widget class="QLabel" name="INITAvailableLabel_2">
          <property name="font">
           <font>
            <pointsize>10</pointsize>
@@ -5051,7 +5051,7 @@
         </widget>
        </item>
        <item row="2" column="3">
-        <widget class="QLabel" name="HMPendingLabel">
+        <widget class="QLabel" name="INITPendingLabel">
          <property name="font">
           <font>
            <pointsize>10</pointsize>
@@ -5356,9 +5356,9 @@
       <zorder>label_13</zorder>
       <zorder>label_11</zorder>
       <zorder>BitcoinBalanceLabel</zorder>
-      <zorder>HMBalanceLabel</zorder>
-      <zorder>HMAvailableLabel_2</zorder>
-      <zorder>HMPendingLabel</zorder>
+      <zorder>INITBalanceLabel</zorder>
+      <zorder>INITAvailableLabel_2</zorder>
+      <zorder>INITPendingLabel</zorder>
       <zorder>BitcoinAvailableLabel</zorder>
       <zorder>BitcoinPendingLabel</zorder>
       <zorder>label_33</zorder>

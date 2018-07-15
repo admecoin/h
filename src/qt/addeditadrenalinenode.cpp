@@ -28,7 +28,7 @@ AddEditAdrenalineNode::AddEditAdrenalineNode(QWidget *parent) :
     ui->aliasLineEdit->setPlaceholderText("Enter your Masternode alias");
     ui->addressLineEdit->setPlaceholderText("Enter your IP & port");
     ui->privkeyLineEdit->setPlaceholderText("Enter your Masternode private key");
-    ui->txhashLineEdit->setPlaceholderText("Enter your 1500 HLDC TXID");
+    ui->txhashLineEdit->setPlaceholderText("Enter your 2500 HLDC TXID");
     ui->outputindexLineEdit->setPlaceholderText("Enter your transaction output index");
     ui->rewardaddressLineEdit->setPlaceholderText("Enter a reward recive address");
     ui->rewardpercentageLineEdit->setPlaceholderText("Input the % for the reward");
@@ -52,7 +52,7 @@ void AddEditAdrenalineNode::on_okButton_clicked()
     else if(ui->addressLineEdit->text() == "")
     {
         QMessageBox msg;
-        msg.setText("Please enter an ip address and port. (123.45.67.89:45522)");
+        msg.setText("Please enter an ip address and port. (123.45.67.89:9999)");
         msg.exec();
         return;
     }

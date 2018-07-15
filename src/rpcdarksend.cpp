@@ -86,7 +86,7 @@ Value darksend(const Array& params, bool fHelp)
             "<amount> is type \"real\" and will be rounded to the nearest 0.1"
             + HelpRequiringPassphrase());
 
-    CHeldCoinAddress address(params[0].get_str());
+    CHeldCoinCoinAddress address(params[0].get_str());
     if (!address.IsValid())
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid HeldCoin address");
 
@@ -508,7 +508,7 @@ Value masternode(const Array& params, bool fHelp)
             pubkey.SetDestination(winner->pubkey.GetID());
             CTxDestination address1;
             ExtractDestination(pubkey, address1);
-            CHeldCoinAddress address2(address1);
+            CHeldCoinCoinAddress address2(address1);
 
             obj.push_back(Pair("IP:port",       winner->addr.ToString().c_str()));
             obj.push_back(Pair("protocol",      (int64_t)winner->protocolVersion));
@@ -527,7 +527,7 @@ Value masternode(const Array& params, bool fHelp)
         CKey secret;
         secret.MakeNewKey(false);
 
-        return CHeldCoinSecret(secret).ToString();
+        return CHeldCoinCoinSecret(secret).ToString();
     }
 
     if (strCommand == "winners")
@@ -544,7 +544,7 @@ Value masternode(const Array& params, bool fHelp)
             if(masternodePayments.GetBlockPayee(nHeight, payee, vin)){
                 CTxDestination address1;
                 ExtractDestination(payee, address1);
-                CHeldCoinAddress address2(address1);
+                CHeldCoinCoinAddress address2(address1);
 
                 if(strMode == "addr")
                     obj.push_back(Pair(boost::lexical_cast<std::string>(nHeight),       address2.ToString().c_str()));
@@ -734,7 +734,7 @@ Value masternode(const Array& params, bool fHelp)
         pubkey = GetScriptForDestination(activeMasternode.pubKeyMasternode.GetID());
         CTxDestination address1;
         ExtractDestination(pubkey, address1);
-        CHeldCoinAddress address2(address1);
+        CHeldCoinCoinAddress address2(address1);
 
         Object mnObj;
         mnObj.push_back(Pair("vin", activeMasternode.vin.ToString().c_str()));
@@ -769,7 +769,7 @@ Value masternodelist(const Array& params, bool fHelp)
                 "\nAvailable modes:\n"
                 "  activeseconds  - Print number of seconds masternode recognized by the network as enabled\n"
                 "  reward         - Show reward settings\n"
-                "  full           - Print info in format 'status protocol pubkey vin lastseen activeseconds' (can be additionally filtered, partial match)\n"
+                "  full           - Print info in format 'status protocol pubkey ip:port tier lastseen activeseconds lastpaidtime' (can be additionally filtered, partial match)\n"
                 "  lastseen       - Print timestamp of when a masternode was last seen on the network\n"
                 "  protocol       - Print protocol of a masternode (can be additionally filtered, exact match)\n"
                 "  pubkey         - Print public key associated with a masternode (can be additionally filtered, partial match)\n"
@@ -799,7 +799,7 @@ Value masternodelist(const Array& params, bool fHelp)
             } else if (strMode == "reward") {
                 CTxDestination address1;
                 ExtractDestination(mn.rewardAddress, address1);
-                CHeldCoinAddress address2(address1);
+                CHeldCoinCoinAddress address2(address1);
 
                 if(strFilter !="" && address2.ToString().find(strFilter) == string::npos &&
                     strVin.find(strFilter) == string::npos) continue;
@@ -817,7 +817,7 @@ Value masternodelist(const Array& params, bool fHelp)
                 pubkey.SetDestination(mn.pubkey.GetID());
                 CTxDestination address1;
                 ExtractDestination(pubkey, address1);
-                CHeldCoinAddress address2(address1);
+                CHeldCoinCoinAddress address2(address1);
 
                 std::ostringstream addrStream;
                 addrStream << setw(21) << strVin;
@@ -828,6 +828,7 @@ Value masternodelist(const Array& params, bool fHelp)
                                mn.protocolVersion << " " <<
                                address2.ToString() << " " <<
                                mn.addr.ToString() << " " <<
+							   mn.tier << " " <<	
                                mn.lastTimeSeen << " " << setw(8) <<
                                (mn.lastTimeSeen - mn.sigTime) << " " <<
                                mn.nLastPaid;
@@ -848,7 +849,7 @@ Value masternodelist(const Array& params, bool fHelp)
                 pubkey.SetDestination(mn.pubkey.GetID());
                 CTxDestination address1;
                 ExtractDestination(pubkey, address1);
-                CHeldCoinAddress address2(address1);
+                CHeldCoinCoinAddress address2(address1);
 
                 if(strFilter !="" && address2.ToString().find(strFilter) == string::npos &&
                     strVin.find(strFilter) == string::npos) continue;

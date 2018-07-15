@@ -54,10 +54,10 @@ bool AppInit(int argc, char* argv[])
             // First part of help message is specific to bitcoind / RPC client
             std::string strUsage = _("HeldCoin version") + " " + FormatFullVersion() + "\n\n" +
                 _("Usage:") + "\n" +
-                  "  heldcoind [options]                     " + "\n" +
-                  "  heldcoind [options] <command> [params]  " + _("Send command to -server or heldcoind") + "\n" +
-                  "  heldcoind [options] help                " + _("List commands") + "\n" +
-                  "  heldcoind [options] help <command>      " + _("Get help for a command") + "\n";
+                  "  HeldCoind [options]                     " + "\n" +
+                  "  HeldCoind [options] <command> [params]  " + _("Send command to -server or HeldCoind") + "\n" +
+                  "  HeldCoind [options] help                " + _("List commands") + "\n" +
+                  "  HeldCoind [options] help <command>      " + _("Get help for a command") + "\n";
 
             strUsage += "\n" + HelpMessage();
 

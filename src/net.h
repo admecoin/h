@@ -269,7 +269,7 @@ public:
     {
         switch (banReason) {
         case BanReasonNodeMisbehaving:
-            return "node misbehaving";
+            return "node misbehabing";
         case BanReasonManuallyAdded:
             return "manually added";
         default:
@@ -378,7 +378,7 @@ public:
     mruset<CAddress> setAddrKnown;
     bool fGetAddr;
     std::set<uint256> setKnown;
-    uint256 hashCheckpointKnown; // ppcoin: known sent sync-checkpoint
+    uint256 hashCheckpointKnown; // HeldCoinCoin: known sent sync-checkpoint
 
     // inventory based relay
     mruset<CInv> setInventoryKnown;

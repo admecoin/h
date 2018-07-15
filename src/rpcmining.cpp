@@ -46,7 +46,7 @@ Value getsubsidy(const Array& params, bool fHelp)
             "getsubsidy [nTarget]\n"
             "Returns proof-of-work subsidy value for the specified value of target.");
 
-    return (int64_t)GetProofOfStakeReward(pindexBest->pprev, 0, 0);
+    return (int64_t)GetProofOfStakeReward(pindexBest->pprev, 0);
 }
 
 Value getstakesubsidy(const Array& params, bool fHelp)
@@ -73,7 +73,7 @@ Value getstakesubsidy(const Array& params, bool fHelp)
     if (!tx.GetCoinAge(txdb, pindexBest, nCoinAge))
         throw JSONRPCError(RPC_MISC_ERROR, "GetCoinAge failed");
 
-    return (uint64_t)GetProofOfStakeReward(pindexBest->pprev, nCoinAge, 0);
+    return (uint64_t)GetProofOfStakeReward(pindexBest->pprev, 0);
 }
 
 Value getmininginfo(const Array& params, bool fHelp)
@@ -97,7 +97,7 @@ Value getmininginfo(const Array& params, bool fHelp)
     //diff.push_back(Pair("search-interval",      (int)nLastCoinStakeSearchInterval));
     obj.push_back(Pair("difficulty",    GetDifficulty(GetLastBlockIndex(pindexBest, true))));
 
-    obj.push_back(Pair("blockvalue",    (int64_t)GetProofOfStakeReward(pindexBest->pprev, 0, 0)));
+    obj.push_back(Pair("blockvalue",    (int64_t)GetProofOfStakeReward(pindexBest->pprev, 0)));
     obj.push_back(Pair("netmhashps",     GetPoWMHashPS()));
     obj.push_back(Pair("netstakeweight", GetPoSKernelPS()));
     obj.push_back(Pair("errors",        GetWarnings("statusbar")));
@@ -127,10 +127,7 @@ Value getstakinginfo(const Array& params, bool fHelp)
 
     uint64_t nNetworkWeight = GetPoSKernelPS();
     bool staking = nLastCoinStakeSearchInterval && nWeight;
-	unsigned int nTempSpacing = TARGET_SPACING;
-	if (GetAdjustedTime() > FORK_TIME)
-		nTempSpacing = TARGET_SPACING2;
-    nExpectedTime = staking ? (nTempSpacing * nNetworkWeight / nWeight) : 0;
+    nExpectedTime = staking ? (TARGET_SPACING * nNetworkWeight / nWeight) : 0;
 
     Object obj;
 
@@ -247,11 +244,11 @@ Value getworkex(const Array& params, bool fHelp)
             "If [data, coinbase] is not specified, returns extended work data.\n"
         );
 
-    if (vNodes.empty())
+ /*   if (vNodes.empty())
         throw JSONRPCError(-9, "HeldCoin is not connected!");
 
     if (IsInitialBlockDownload())
-        throw JSONRPCError(-10, "HeldCoin is downloading blocks...");
+        throw JSONRPCError(-10, "HeldCoin is downloading blocks...");*/
 
     if (pindexBest->nHeight >= Params().LastPOWBlock())
         throw JSONRPCError(RPC_MISC_ERROR, "No more PoW blocks");

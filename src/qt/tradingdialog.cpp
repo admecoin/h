@@ -37,11 +37,11 @@ tradingDialog::tradingDialog(QWidget *parent) :
     qDebug() <<  "Expected this";
     
     ui->BtcAvailableLabel->setTextFormat(Qt::RichText);
-    ui->HMAvailableLabel->setTextFormat(Qt::RichText);
+    ui->INITAvailableLabel->setTextFormat(Qt::RichText);
     ui->BuyCostLabel->setTextFormat(Qt::RichText);
     ui->SellCostLabel->setTextFormat(Qt::RichText);
     ui->BittrexBTCLabel->setTextFormat(Qt::RichText);
-    ui->BittrexHMLabel->setTextFormat(Qt::RichText);
+    ui->BittrexINITLabel->setTextFormat(Qt::RichText);
     ui->CSDumpLabel->setTextFormat(Qt::RichText);
     ui->CSTotalLabel->setTextFormat(Qt::RichText);
     ui->CSReceiveLabel->setTextFormat(Qt::RichText);
@@ -138,7 +138,7 @@ void tradingDialog::InitTrading()
 }
 
 void tradingDialog::UpdaterFunction(){
-    //HMst get the main exchange info in order to populate qLabels in maindialog. then get data
+    //INITst get the main exchange info in order to populate qLabels in maindialog. then get data
     //required for the current tab.
 
      int Retval = SetExchangeInfoTextLabels();
@@ -176,7 +176,7 @@ QString tradingDialog::CancelOrder(QString OrderId){
         return Response;
 }
 
-QString tradingDialog::BuyHM(QString OrderType, double Quantity, double Rate){
+QString tradingDialog::BuyINIT(QString OrderType, double Quantity, double Rate){
 
     QString str = "";
     QString URL = "https://bittrex.com/api/v1.1/market/";
@@ -192,7 +192,7 @@ QString tradingDialog::BuyHM(QString OrderType, double Quantity, double Rate){
     return Response;
 }
 
-QString tradingDialog::SellHM(QString OrderType, double Quantity, double Rate){
+QString tradingDialog::SellINIT(QString OrderType, double Quantity, double Rate){
 
     QString str = "";
     QString URL = "https://bittrex.com/api/v1.1/market/";
@@ -461,8 +461,8 @@ void tradingDialog::ParseAndPopulateOrderBookTables(QString OrderBook){
     QJsonArray  BuyArray  = ResultObject.value("buy").toArray();                //get buy/sell object from result object
     QJsonArray  SellArray = ResultObject.value("sell").toArray();               //get buy/sell object from result object
 
-    double HMSupply = 0;
-    double HMDemand = 0;
+    double INITSupply = 0;
+    double INITDemand = 0;
     double BtcSupply = 0;
     double BtcDemand = 0;
 
@@ -476,7 +476,7 @@ void tradingDialog::ParseAndPopulateOrderBookTables(QString OrderBook){
         double y = obj["Quantity"].toDouble();
         double a = (x * y);
 
-        HMSupply += y;
+        INITSupply += y;
         BtcSupply += a;
 
         AskRows = ui->AsksTable->rowCount();
@@ -498,7 +498,7 @@ void tradingDialog::ParseAndPopulateOrderBookTables(QString OrderBook){
         double y = obj["Quantity"].toDouble();
         double a = (x * y);
 
-        HMDemand += y;
+        INITDemand += y;
         BtcDemand += a;
 
         BidRows = ui->BidsTable->rowCount();
@@ -510,11 +510,11 @@ void tradingDialog::ParseAndPopulateOrderBookTables(QString OrderBook){
         BuyItteration++;
     }
 
-    ui->HMSupply->setText("<b>Supply:</b> <span style='font-weight:bold; font-size:12px; color:blue'>" + str.number(HMSupply,'i',8) + "</span><b> HLDC</b>");
+    ui->INITSupply->setText("<b>Supply:</b> <span style='font-weight:bold; font-size:12px; color:blue'>" + str.number(INITSupply,'i',8) + "</span><b> HLDC</b>");
     ui->BtcSupply->setText("<span style='font-weight:bold; font-size:12px; color:blue'>" + str.number(BtcSupply,'i',8) + "</span><b> BTC</b>");
     ui->AsksCount->setText("<b>Ask's :</b> <span style='font-weight:bold; font-size:12px; color:blue'>" + str.number(ui->AsksTable->rowCount()) + "</span>");
 
-    ui->HMDemand->setText("<b>Demand:</b> <span style='font-weight:bold; font-size:12px; color:blue'>" + str.number(HMDemand,'i',8) + "</span><b> HLDC</b>");
+    ui->INITDemand->setText("<b>Demand:</b> <span style='font-weight:bold; font-size:12px; color:blue'>" + str.number(INITDemand,'i',8) + "</span><b> HLDC</b>");
     ui->BtcDemand->setText("<span style='font-weight:bold; font-size:12px; color:blue'>" + str.number(BtcDemand,'i',8) + "</span><b> BTC</b>");
     ui->BidsCount->setText("<b>Bid's :</b> <span style='font-weight:bold; font-size:12px; color:blue'>" + str.number(ui->BidsTable->rowCount()) + "</span>");
     obj.empty();
@@ -566,7 +566,7 @@ void tradingDialog::ActionsOnSwitch(int index = -1){
                     Response3 = GetOrderBook();
 
                     if((Response.size() > 0 && Response != "Error") && (Response2.size() > 0 && Response2 != "Error")){
-                        DisplayBalance(*ui->BtcAvailableLabel, *ui->HMAvailableLabel, Response, Response2);
+                        DisplayBalance(*ui->BtcAvailableLabel, *ui->INITAvailableLabel, Response, Response2);
                     }
                     if ((Response3.size() > 0 && Response3 != "Error")) {
                         ParseAndPopulateOrderBookTables(Response3);
@@ -578,7 +578,7 @@ void tradingDialog::ActionsOnSwitch(int index = -1){
                     Response = GetBalance("HLDC");
                     Response2 = GetBalance("BTC");
                     if((Response.size() > 0 && Response != "Error") && (Response2.size() > 0 && Response2 != "Error")){
-                        DisplayBalance(*ui->BittrexHMLabel, *ui->BittrexBTCLabel, Response, Response2);
+                        DisplayBalance(*ui->BittrexINITLabel, *ui->BittrexBTCLabel, Response, Response2);
                     }
 
                 break;
@@ -613,7 +613,7 @@ void tradingDialog::ActionsOnSwitch(int index = -1){
 
                     Response = GetBalance("HLDC");
                     if(Response.size() > 0 && Response != "Error"){
-                        DisplayBalance(*ui->HMBalanceLabel,*ui->HMAvailableLabel_2,*ui->HMPendingLabel, QString::fromUtf8("HLDC"),Response);
+                        DisplayBalance(*ui->INITBalanceLabel,*ui->INITAvailableLabel_2,*ui->INITPendingLabel, QString::fromUtf8("HLDC"),Response);
                     }
                 break;
 
@@ -704,7 +704,7 @@ void tradingDialog::CalculateBuyCostLabel(){
 void tradingDialog::CalculateSellCostLabel(){
 
     double price    = ui->SellBidPriceEdit->text().toDouble();
-    double Quantity = ui->UnitsInputHM->text().toDouble();
+    double Quantity = ui->UnitsInputINIT->text().toDouble();
     double cost = ((price * Quantity) - ((price * Quantity / 100) * 0.25));
 
     QString Str = "";
@@ -721,7 +721,7 @@ void tradingDialog::CalculateCSReceiveLabel(){
     QJsonObject BalanceObject =  GetResultObjectFromJSONObject(balance);
     QJsonObject obj;
 
-    double AvailableHM = BalanceObject["Available"].toDouble();
+    double AvailableINIT = BalanceObject["Available"].toDouble();
     double Quantity = ui->CSUnitsInput->text().toDouble();
     double Received = 0;
     double Qty = 0;
@@ -754,7 +754,7 @@ void tradingDialog::CalculateCSReceiveLabel(){
     QString ReceiveStr = "";
     QString DumpStr = "";
     QString TotalStr = "";
-    if ( Qty < AvailableHM )
+    if ( Qty < AvailableINIT )
     {
         ui->CSReceiveLabel->setText("<span style='font-weight:bold; font-size:12px; color:green'>" + ReceiveStr.number((ui->CSUnitsInput->text().toDouble() - 0.0002),'i',8) + "</span>");
         ui->CSDumpLabel->setText("<span style='font-weight:bold; font-size:12px; color:red'>" + DumpStr.number(Price,'i',8) + "</span>");
@@ -768,7 +768,6 @@ void tradingDialog::CalculateCSReceiveLabel(){
         ui->CSTotalLabel->setText("<span style='font-weight:bold; font-size:12px; color:red'>" + TotalStr + "</span>");
     }
 }
-
 void tradingDialog::on_UpdateKeys_clicked(bool Save, bool Load)
 {
   this->ApiKey    = ui->ApiKeyInput->text();
@@ -919,9 +918,9 @@ void tradingDialog::on_Sell_Max_Amount_clicked()
     QString str;
     QJsonObject ResultObject =  GetResultObjectFromJSONObject(responseA);
 
-    double AvailableHM = ResultObject["Available"].toDouble();
+    double AvailableINIT = ResultObject["Available"].toDouble();
 
-    ui->UnitsInputHM->setText(str.number(AvailableHM,'i',8));
+    ui->UnitsInputINIT->setText(str.number(AvailableINIT,'i',8));
 }
 
 void tradingDialog::on_Buy_Max_Amount_clicked()
@@ -948,7 +947,7 @@ void tradingDialog::on_Buy_Max_Amount_clicked()
 
 void tradingDialog::on_CS_Max_Amount_clicked()
 {
-    double Quantity = ui->BittrexHMLabel->text().toDouble();
+    double Quantity = ui->BittrexINITLabel->text().toDouble();
     double Received = 0;
     double Qty = 0;
     double Price = 0;
@@ -998,9 +997,9 @@ void tradingDialog::on_Withdraw_Max_Amount_clicked()
 
     QJsonObject ResultObject =  GetResultObjectFromJSONObject(responseA);
 
-    double AvailableHM = ResultObject["Available"].toDouble();
+    double AvailableINIT = ResultObject["Available"].toDouble();
 
-    ui->WithdrawUnitsInput->setText(str.number(AvailableHM,'i',8));
+    ui->WithdrawUnitsInput->setText(str.number(AvailableINIT,'i',8));
 }
 
 QJsonObject tradingDialog::GetResultObjectFromJSONObject(QString response){
@@ -1089,7 +1088,7 @@ void tradingDialog::on_BuyBidcomboBox_currentIndexChanged(const QString &arg1)
     CalculateBuyCostLabel(); //update cost
 }
 
-void tradingDialog::on_BuyHM_clicked()
+void tradingDialog::on_BuyINIT_clicked()
 {
     double Rate;
     double Quantity;
@@ -1113,7 +1112,7 @@ void tradingDialog::on_BuyHM_clicked()
 
     if (reply == QMessageBox::Yes) {
 
-        QString Response =  BuyHM(Order,Quantity,Rate);
+        QString Response =  BuyINIT(Order,Quantity,Rate);
 
         QJsonDocument jsonResponse = QJsonDocument::fromJson(Response.toUtf8());          //get json from str.
         QJsonObject  ResponseObject = jsonResponse.object();                              //get json obj
@@ -1129,13 +1128,13 @@ void tradingDialog::on_BuyHM_clicked()
     }
 }
 
-void tradingDialog::on_SellHMBTN_clicked()
+void tradingDialog::on_SellINITBTN_clicked()
 {
     double Rate;
     double Quantity;
 
     Rate     = ui->SellBidPriceEdit->text().toDouble();
-    Quantity = ui->UnitsInputHM->text().toDouble();
+    Quantity = ui->UnitsInputINIT->text().toDouble();
 
     QString OrderType = "Limit";
     QString Order;
@@ -1143,7 +1142,7 @@ void tradingDialog::on_SellHMBTN_clicked()
     if(OrderType == "Limit"){Order = "selllimit";}else if (OrderType == "Market"){ Order = "sellmarket";}
 
     QString Msg = "Are you sure you want to Sell ";
-            Msg += ui->UnitsInputHM->text();
+            Msg += ui->UnitsInputINIT->text();
             Msg += " HLDC @ ";
             Msg += ui->SellBidPriceEdit->text();
             Msg += " BTC Each";
@@ -1153,7 +1152,7 @@ void tradingDialog::on_SellHMBTN_clicked()
 
     if (reply == QMessageBox::Yes) {
 
-        QString Response =  SellHM(Order,Quantity,Rate);
+        QString Response =  SellINIT(Order,Quantity,Rate);
         QJsonDocument jsonResponse = QJsonDocument::fromJson(Response.toUtf8());          //get json from str.
         QJsonObject  ResponseObject = jsonResponse.object();                              //get json obj
 
@@ -1225,7 +1224,7 @@ void tradingDialog::on_CSUnitsBtn_clicked()
                 Qty += y;
                 Quantity -= ((Price * y) - ((Price * y / 100) * 0.25));
 
-                QString SellResponse = SellHM(Order,y,x);
+                QString SellResponse = SellINIT(Order,y,x);
                 QJsonDocument SelljsonResponse = QJsonDocument::fromJson(SellResponse.toUtf8());          //get json from str.
                 QJsonObject SellResponseObject = SelljsonResponse.object();                              //get json obj
 
@@ -1248,7 +1247,7 @@ void tradingDialog::on_CSUnitsBtn_clicked()
                 if (Quantity < 0.00051){
                     Quantity = 0.00051;
                 }
-                QString SellResponse = SellHM(Order,(Quantity / x),x);
+                QString SellResponse = SellINIT(Order,(Quantity / x),x);
                 QJsonDocument SelljsonResponse = QJsonDocument::fromJson(SellResponse.toUtf8());          //get json from str.
                 QJsonObject SellResponseObject = SelljsonResponse.object();                              //get json obj
 
@@ -1319,7 +1318,7 @@ void tradingDialog::on_WithdrawUnitsBtn_clicked()
         }
 }
 
-void tradingDialog::on_UnitsInputHM_textChanged(const QString &arg1)
+void tradingDialog::on_UnitsInputINIT_textChanged(const QString &arg1)
 {
      CalculateSellCostLabel(); //update cost
 }

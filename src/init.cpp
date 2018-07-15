@@ -189,7 +189,7 @@ std::string HelpMessage()
     string strUsage = _("Options:") + "\n";
     strUsage += "  -?                     " + _("This help message") + "\n";
     strUsage += "  -conf=<file>           " + _("Specify configuration file (default: HeldCoin.conf)") + "\n";
-    strUsage += "  -pid=<file>            " + _("Specify pid file (default: heldcoind.pid)") + "\n";
+    strUsage += "  -pid=<file>            " + _("Specify pid file (default: HeldCoind.pid)") + "\n";
     strUsage += "  -datadir=<dir>         " + _("Specify data directory") + "\n";
     strUsage += "  -wallet=<dir>          " + _("Specify wallet file (within data directory)") + "\n";
     strUsage += "  -dbcache=<n>           " + _("Set database cache size in megabytes (default: 10)") + "\n";
@@ -292,7 +292,7 @@ strUsage += "\n" + _("Masternode options:") + "\n";
     strUsage += "\n" + _("Darksend options:") + "\n";
     strUsage += "  -enabledarksend=<n>          " + _("Enable use of automated darksend for funds stored in this wallet (0-1, default: 0)") + "\n";
     strUsage += "  -darksendrounds=<n>          " + _("Use N separate masternodes to anonymize funds  (2-8, default: 2)") + "\n";
-    strUsage += "  -anonymizeheldcoinamount=<n> " + _("Keep N HeldCoin anonymized (default: 0)") + "\n";
+    strUsage += "  -anonymizeHeldCoinamount=<n> " + _("Keep N HeldCoin anonymized (default: 0)") + "\n";
     strUsage += "  -liquidityprovider=<n>       " + _("Provide liquidity to Darksend by infrequently mixing coins on a continual basis (0-100, default: 0, 1=very frequent, high fees, 100=very infrequent, low fees)") + "\n";
 
     strUsage += "\n" + _("InstantX options:") + "\n";
@@ -771,7 +771,7 @@ bool AppInit2(boost::thread_group& threadGroup)
     }
 
 #ifdef ENABLE_WALLET
-    if (mapArgs.count("-reservebalance")) // ppcoin: reserve balance amount
+    if (mapArgs.count("-reservebalance")) // HeldCoinCoin: reserve balance amount
     {
         if (!ParseMoney(mapArgs["-reservebalance"], nReserveBalance))
         {
@@ -1047,7 +1047,7 @@ bool AppInit2(boost::thread_group& threadGroup)
         nDarksendRounds = 99999;
     }
 
-    nAnonymizeHeldCoinAmount = GetArg("-anonymizeheldcoinamount", 0);
+    nAnonymizeHeldCoinAmount = GetArg("-anonymizeHeldCoinamount", 0);
     if(nAnonymizeHeldCoinAmount > 999999) nAnonymizeHeldCoinAmount = 999999;
     if(nAnonymizeHeldCoinAmount < 2) nAnonymizeHeldCoinAmount = 2;
 
@@ -1070,8 +1070,8 @@ bool AppInit2(boost::thread_group& threadGroup)
        A note about convertability. Within Darksend pools, each denomination
        is convertable to another.
        For example:
-       1HM+1000 == (.1HM+100)*10
-       10HM+10000 == (1HM+1000)*10
+       1INIT+1000 == (.1INIT+100)*10
+       10INIT+10000 == (1INIT+1000)*10
     */
     darkSendDenominations.push_back( (1000        * COIN)+1000000 );
     darkSendDenominations.push_back( (100         * COIN)+100000 );

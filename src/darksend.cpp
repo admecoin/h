@@ -407,7 +407,7 @@ void CDarksendPool::SetNull(){
 }
 
 bool CDarksendPool::SetCollateralAddress(std::string strAddress){
-    CHeldCoinAddress address;
+    CHeldCoinCoinAddress address;
     if (!address.SetString(strAddress))
     {
         LogPrintf("CDarksendPool::SetCollateralAddress - Invalid DarkSend collateral address\n");
@@ -789,7 +789,7 @@ void CDarksendPool::ChargeRandomFees(){
                 with using it to stop abuse. Otherwise it could serve as an attack vector and
                 allow endless transaction that would bloat HeldCoin and make it unusable. To
                 stop these kinds of attacks 1 in 50 successful transactions are charged. This
-                adds up to a cost of 0.002HM per transaction on average.
+                adds up to a cost of 0.002INIT per transaction on average.
             */
             if(r <= 10)
             {
@@ -1930,10 +1930,10 @@ bool CDarksendPool::IsCompatibleWithSession(int64_t nDenom, CTransaction txColla
 void CDarksendPool::GetDenominationsToString(int nDenom, std::string& strDenom){
     // Function returns as follows:
     //
-    // bit 0 - 100HM+1 ( bit on if present )
-    // bit 1 - 10HM+1
-    // bit 2 - 1HM+1
-    // bit 3 - .1HM+1
+    // bit 0 - 100INIT+1 ( bit on if present )
+    // bit 1 - 10INIT+1
+    // bit 2 - 1INIT+1
+    // bit 3 - .1INIT+1
     // bit 3 - non-denom
 
 
@@ -2006,10 +2006,10 @@ int CDarksendPool::GetDenominations(const std::vector<CTxOut>& vout, bool fSingl
 
     // Function returns as follows:
     //
-    // bit 0 - 100HM+1 ( bit on if present )
-    // bit 1 - 10HM+1
-    // bit 2 - 1HM+1
-    // bit 3 - .1HM+1
+    // bit 0 - 100INIT+1 ( bit on if present )
+    // bit 1 - 10INIT+1
+    // bit 2 - 1INIT+1
+    // bit 3 - .1INIT+1
 
     return denom;
 }
@@ -2100,7 +2100,7 @@ bool CDarkSendSigner::IsVinAssociatedWithPubkey(CTxIn& vin, CPubKey& pubkey){
     //if(GetTransaction(vin.prevout.hash, txVin, hash, true)){
     if(GetTransaction(vin.prevout.hash, txVin, hash)){
         BOOST_FOREACH(CTxOut out, txVin.vout){
-            if(out.nValue == GetMNCollateral(pindexBest->nHeight)*COIN){
+            if( IsMNCollateralValid(out.nValue, pindexBest->nHeight) ){
                 if(out.scriptPubKey == payee2) return true;
             }
         }
@@ -2110,7 +2110,7 @@ bool CDarkSendSigner::IsVinAssociatedWithPubkey(CTxIn& vin, CPubKey& pubkey){
 }
 
 bool CDarkSendSigner::SetKey(std::string strSecret, std::string& errorMessage, CKey& key, CPubKey& pubkey){
-    CHeldCoinSecret vchSecret;
+    CHeldCoinCoinSecret vchSecret;
     bool fGood = vchSecret.SetString(strSecret);
 
     if (!fGood) {

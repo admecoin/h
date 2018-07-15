@@ -55,14 +55,14 @@ private slots:
     void on_BuyBidcomboBox_currentIndexChanged(const QString &arg1);
     void on_UnitsInput_textChanged(const QString &arg1);
     void on_BuyBidPriceEdit_textChanged(const QString &arg1);
-    void on_BuyHM_clicked();
+    void on_BuyINIT_clicked();
 
     void CalculateSellCostLabel();
     void on_Sell_Max_Amount_clicked();
     void on_SellBidcomboBox_currentIndexChanged(const QString &arg1);
-    void on_UnitsInputHM_textChanged(const QString &arg1);
+    void on_UnitsInputINIT_textChanged(const QString &arg1);
     void on_SellBidPriceEdit_textChanged(const QString &arg1);
-    void on_SellHMBTN_clicked();
+    void on_SellINITBTN_clicked();
 
     void CalculateCSReceiveLabel();
     void on_CSUnitsInput_textChanged(const QString &arg1);
@@ -82,8 +82,8 @@ private slots:
 
     QString BittrexTimeStampToReadable(QString DateTime);
     QString CancelOrder(QString Orderid);
-    QString BuyHM(QString OrderType, double Quantity, double Rate);
-    QString SellHM(QString OrderType, double Quantity, double Rate);
+    QString BuyINIT(QString OrderType, double Quantity, double Rate);
+    QString SellINIT(QString OrderType, double Quantity, double Rate);
     QString Withdraw(double Amount, QString Address, QString Coin);
     QString GetMarketHistory();
     QString GetMarketSummary();

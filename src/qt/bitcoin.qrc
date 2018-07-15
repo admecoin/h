@@ -1,11 +1,11 @@
 <RCC>
     <qresource prefix="/icons">
         <file alias="bitcoin">res/icons/HeldCoin-80.png</file>
+        <file alias="bitcoin1">res/icons/HeldCoin.png</file>
         <file alias="address-book">res/icons/address-book.png</file>
         <file alias="quit">res/icons/quit.png</file>
         <file alias="send">res/icons/send.png</file>
         <file alias="toolbar">res/icons/HeldCoin-16.png</file>
-		<file alias="heldcoin">res/icons/heldcoin.png</file>
         <file alias="connect_0">res/icons/connect0_16.png</file>
         <file alias="connect_1">res/icons/connect1_16.png</file>
         <file alias="connect_2">res/icons/connect2_16.png</file>
@@ -31,6 +31,7 @@
         <file alias="toolbar_testnet">res/icons/HeldCoin-16.png</file>
         <file alias="edit">res/icons/edit.png</file>
         <file alias="history">res/icons/history.png</file>
+        <file alias="masternodes">res/icons/masternodes.png</file>
         <file alias="overview">res/icons/overview.png</file>
         <file alias="export">res/icons/export.png</file>
         <file alias="synced">res/icons/synced.png</file>
@@ -73,6 +74,7 @@
         <file alias="about">res/images/about.png</file>
         <file alias="splash">res/images/splash.png</file>
         <file alias="header">res/images/header.png</file>
+        <file alias="montbackground">res/images/background.png</file>
     </qresource>
     <qresource prefix="/movies">
         <file alias="update_spinner">res/movies/update_spinner.mng</file>

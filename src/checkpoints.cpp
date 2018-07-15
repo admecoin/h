@@ -27,11 +27,10 @@ namespace Checkpoints
     //
     static MapCheckpoints mapCheckpoints =
         boost::assign::map_list_of
-    (     0, uint256("0x0000d016f18dbb5344f2efcb98171608329e348136081c37384f5a0e16231960") )
-    (     1350, uint256("0xe9b8fb0dd29e044049cf14c7d57d4ef073d386bdb6ca78f5a07216c06b27678e") )
-    (     1700, uint256("0x63a66db55dbbf4c85d1fa64deb1696d53ed656bf837ef0b0860b61b4648cd3db") )
-    (     2000, uint256("0x0c43aa23c44e5b0ffbf2479ffc7f3ba6b5f503b4b0b9c88a0be549c310d0918e") )
+		(0, uint256("0x0000d016f18dbb5344f2efcb98171608329e348136081c37384f5a0e16231960"))
     ;
+
+    // static MapCheckpoints mapCheckpoints;
 
     // TestNet has no checkpoints
     static MapCheckpoints mapCheckpointsTestnet;
@@ -51,7 +50,8 @@ namespace Checkpoints
 
         if (checkpoints.empty())
             return 0;
-        return checkpoints.rbegin()->first;
+        //return checkpoints.rbegin()->first;
+        return 0;
     }
 
     CBlockIndex* GetLastCheckpoint(const std::map<uint256, CBlockIndex*>& mapBlockIndex)
@@ -63,7 +63,8 @@ namespace Checkpoints
             const uint256& hash = i.second;
             std::map<uint256, CBlockIndex*>::const_iterator t = mapBlockIndex.find(hash);
             if (t != mapBlockIndex.end())
-                return t->second;
+                //return t->second;
+                return NULL;
         }
         return NULL;
     }

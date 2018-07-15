@@ -105,7 +105,7 @@ CScript _createmultisig(const Array& params)
         const std::string& ks = keys[i].get_str();
 #ifdef ENABLE_WALLET
         // Case 1: Bitcoin address and we have full public key:
-        CHeldCoinAddress address(ks);
+        CHeldCoinCoinAddress address(ks);
         if (pwalletMain && address.IsValid())
         {
             CKeyID keyID;
@@ -175,7 +175,7 @@ Value createmultisig(const Array& params, bool fHelp)
     // Construct using pay-to-script-hash:
     CScript inner = _createmultisig(params);
     CScriptID innerID = inner.GetID();
-    CHeldCoinAddress address(innerID);
+    CHeldCoinCoinAddress address(innerID);
 
     Object result;
     result.push_back(Pair("address", address.ToString()));
@@ -246,11 +246,11 @@ Value getnewaddress(const Array& params, bool fHelp)
 
     pwalletMain->SetAddressBookName(keyID, strAccount);
 
-    return CHeldCoinAddress(keyID).ToString();
+    return CHeldCoinCoinAddress(keyID).ToString();
 }
 
 
-CHeldCoinAddress GetAccountAddress(string strAccount, bool bForceNew=false)
+CHeldCoinCoinAddress GetAccountAddress(string strAccount, bool bForceNew=false)
 {
     CWalletDB walletdb(pwalletMain->strWalletFile);
 
@@ -285,7 +285,7 @@ CHeldCoinAddress GetAccountAddress(string strAccount, bool bForceNew=false)
         walletdb.WriteAccount(strAccount, account);
     }
 
-    return CHeldCoinAddress(account.vchPubKey.GetID());
+    return CHeldCoinCoinAddress(account.vchPubKey.GetID());
 }
 
 Value getaccountaddress(const Array& params, bool fHelp)
@@ -331,7 +331,7 @@ Value setaccount(const Array& params, bool fHelp)
             + HelpExampleRpc("setaccount", "\"TfFxcTN7BJQp88cPJYRvFpUAAKefTib9uh\", \"tabby\"")
         );
 
-    CHeldCoinAddress address(params[0].get_str());
+    CHeldCoinCoinAddress address(params[0].get_str());
     if (!address.IsValid())
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid HeldCoin address");
 
@@ -374,7 +374,7 @@ Value getaccount(const Array& params, bool fHelp)
             + HelpExampleRpc("getaccount", "\"TfFxcTN7BJQp88cPJYRvFpUAAKefTib9uh\"")
         );
 
-    CHeldCoinAddress address(params[0].get_str());
+    CHeldCoinCoinAddress address(params[0].get_str());
     if (!address.IsValid())
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid HeldCoin address");
 
@@ -408,9 +408,9 @@ Value getaddressesbyaccount(const Array& params, bool fHelp)
 
     // Find all addresses that have the given account
     Array ret;
-    BOOST_FOREACH(const PAIRTYPE(CHeldCoinAddress, string)& item, pwalletMain->mapAddressBook)
+    BOOST_FOREACH(const PAIRTYPE(CHeldCoinCoinAddress, string)& item, pwalletMain->mapAddressBook)
     {
-        const CHeldCoinAddress& address = item.first;
+        const CHeldCoinCoinAddress& address = item.first;
         const string& strName = item.second;
         if (strName == strAccount)
             ret.push_back(address.ToString());
@@ -447,7 +447,7 @@ Value sendtoaddress(const Array& params, bool fHelp)
         && IsStealthAddress(params[0].get_str()))
         return sendtostealthaddress(params, false);
 
-    CHeldCoinAddress address(params[0].get_str());
+    CHeldCoinCoinAddress address(params[0].get_str());
     if (!address.IsValid())
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid HeldCoin address");
 
@@ -508,12 +508,12 @@ Value listaddressgroupings(const Array& params, bool fHelp)
         BOOST_FOREACH(CTxDestination address, grouping)
         {
             Array addressInfo;
-            addressInfo.push_back(CHeldCoinAddress(address).ToString());
+            addressInfo.push_back(CHeldCoinCoinAddress(address).ToString());
             addressInfo.push_back(ValueFromAmount(balances[address]));
             {
                 LOCK(pwalletMain->cs_wallet);
-                if (pwalletMain->mapAddressBook.find(CHeldCoinAddress(address).Get()) != pwalletMain->mapAddressBook.end())
-                    addressInfo.push_back(pwalletMain->mapAddressBook.find(CHeldCoinAddress(address).Get())->second);
+                if (pwalletMain->mapAddressBook.find(CHeldCoinCoinAddress(address).Get()) != pwalletMain->mapAddressBook.end())
+                    addressInfo.push_back(pwalletMain->mapAddressBook.find(CHeldCoinCoinAddress(address).Get())->second);
             }
             jsonGrouping.push_back(addressInfo);
         }
@@ -550,7 +550,7 @@ Value signmessage(const Array& params, bool fHelp)
     string strAddress = params[0].get_str();
     string strMessage = params[1].get_str();
 
-    CHeldCoinAddress addr(strAddress);
+    CHeldCoinCoinAddress addr(strAddress);
     if (!addr.IsValid())
         throw JSONRPCError(RPC_TYPE_ERROR, "Invalid address");
 
@@ -596,7 +596,7 @@ Value getreceivedbyaddress(const Array& params, bool fHelp)
        );
 
     // Bitcoin address
-    CHeldCoinAddress address = CHeldCoinAddress(params[0].get_str());
+    CHeldCoinCoinAddress address = CHeldCoinCoinAddress(params[0].get_str());
     CScript scriptPubKey;
     if (!address.IsValid())
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid HeldCoin address");
@@ -902,7 +902,7 @@ Value sendfrom(const Array& params, bool fHelp)
     EnsureWalletIsUnlocked();
 
     string strAccount = AccountFromValue(params[0]);
-    CHeldCoinAddress address(params[1].get_str());
+    CHeldCoinCoinAddress address(params[1].get_str());
     if (!address.IsValid())
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid HeldCoin address");
     CAmount nAmount = AmountFromValue(params[2]);
@@ -979,13 +979,13 @@ Value sendmany(const Array& params, bool fHelp)
     if (params.size() > 3 && params[3].type() != null_type && !params[3].get_str().empty())
         wtx.mapValue["comment"] = params[3].get_str();
 
-    set<CHeldCoinAddress> setAddress;
+    set<CHeldCoinCoinAddress> setAddress;
     vector<pair<CScript, int64_t> > vecSend;
 
     int64_t totalAmount = 0;
     BOOST_FOREACH(const Pair& s, sendTo)
     {
-        CHeldCoinAddress address(s.name_);
+        CHeldCoinCoinAddress address(s.name_);
         if (!address.IsValid())
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, string("Invalid HeldCoin address: ")+s.name_);
 
@@ -1080,7 +1080,7 @@ Value addmultisigaddress(const Array& params, bool fHelp)
         const std::string& ks = keys[i].get_str();
 
         // Case 1: Bitcoin address and we have full public key:
-        CHeldCoinAddress address(ks);
+        CHeldCoinCoinAddress address(ks);
         if (pwalletMain && address.IsValid())
         {
             CKeyID keyID;
@@ -1118,7 +1118,7 @@ Value addmultisigaddress(const Array& params, bool fHelp)
         throw runtime_error("AddCScript() failed");
 
     pwalletMain->SetAddressBookName(innerID, strAccount);
-    return CHeldCoinAddress(innerID).ToString();
+    return CHeldCoinCoinAddress(innerID).ToString();
 }
 
 Value addredeemscript(const Array& params, bool fHelp)
@@ -1143,7 +1143,7 @@ Value addredeemscript(const Array& params, bool fHelp)
         throw runtime_error("AddCScript() failed");
 
     pwalletMain->SetAddressBookName(innerID, strAccount);
-    return CHeldCoinAddress(innerID).ToString();
+    return CHeldCoinCoinAddress(innerID).ToString();
 }
 
 struct tallyitem
@@ -1180,7 +1180,7 @@ Value ListReceived(const Array& params, bool fByAccounts)
             filter = filter | ISMINE_WATCH_ONLY;
 
     // Tally
-    map<CHeldCoinAddress, tallyitem> mapTally;
+    map<CHeldCoinCoinAddress, tallyitem> mapTally;
     for (map<uint256, CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it)
     {
         const CWalletTx& wtx = (*it).second;
@@ -1216,11 +1216,11 @@ Value ListReceived(const Array& params, bool fByAccounts)
     // Reply
     Array ret;
     map<string, tallyitem> mapAccountTally;
-    BOOST_FOREACH(const PAIRTYPE(CHeldCoinAddress, string)& item, pwalletMain->mapAddressBook)
+    BOOST_FOREACH(const PAIRTYPE(CHeldCoinCoinAddress, string)& item, pwalletMain->mapAddressBook)
     {
-        const CHeldCoinAddress& address = item.first;
+        const CHeldCoinCoinAddress& address = item.first;
         const string& strAccount = item.second;
-        map<CHeldCoinAddress, tallyitem>::iterator it = mapTally.find(address);
+        map<CHeldCoinCoinAddress, tallyitem>::iterator it = mapTally.find(address);
         if (it == mapTally.end() && !fIncludeEmpty)
             continue;
 
@@ -1357,7 +1357,7 @@ Value listreceivedbyaccount(const Array& params, bool fHelp)
 
 static void MaybePushAddress(Object & entry, const CTxDestination &dest)
 {
-    CHeldCoinAddress addr;
+    CHeldCoinCoinAddress addr;
     if (addr.Set(dest))
         entry.push_back(Pair("address", addr.ToString()));
 }
@@ -1967,7 +1967,7 @@ Value walletpassphrase(const Array& params, bool fHelp)
     nWalletUnlockTime = GetTime() + nSleepTime;
     RPCRunLater("lockwallet", boost::bind(LockWallet, pwalletMain), nSleepTime);
 
-    // ppcoin: if user OS account compromised prevent trivial sendmoney commands
+    // HeldCoinCoin: if user OS account compromised prevent trivial sendmoney commands
     if (params.size() > 2)
         fWalletUnlockStakingOnly = params[2].get_bool();
     else
@@ -2105,7 +2105,7 @@ Value encryptwallet(const Array& params, bool fHelp)
 }
 
 
-// ppcoin: reserve balance from being staked for network protection
+// HeldCoinCoin: reserve balance from being staked for network protection
 Value reservebalance(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() > 2)
@@ -2144,7 +2144,7 @@ Value reservebalance(const Array& params, bool fHelp)
 }
 
 
-// ppcoin: check wallet integrity
+// HeldCoinCoin: check wallet integrity
 Value checkwallet(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() > 0)
@@ -2167,7 +2167,7 @@ Value checkwallet(const Array& params, bool fHelp)
 }
 
 
-// ppcoin: repair wallet
+// HeldCoinCoin: repair wallet
 Value repairwallet(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() > 0)
@@ -2189,7 +2189,7 @@ Value repairwallet(const Array& params, bool fHelp)
     return result;
 }
 
-// NovaCoin: resend unconfirmed wallet transactions
+// HeldCoinCoin: resend unconfirmed wallet transactions
 Value resendtx(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() > 1)
@@ -2203,7 +2203,7 @@ Value resendtx(const Array& params, bool fHelp)
     return Value::null;
 }
 
-// ppcoin: make a public-private key pair
+// HeldCoinCoin: make a public-private key pair
 Value makekeypair(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() > 1)
